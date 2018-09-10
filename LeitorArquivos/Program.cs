@@ -39,7 +39,10 @@ namespace LeitorArquivos
 
             foreach (FileInfo file in dir.GetFiles())
             {
-                if (!file.Name.Equals("LeitorArquivos.exe"))
+
+                var exe = System.Reflection.Assembly.GetExecutingAssembly().ManifestModule.Name;
+
+                if (!file.Name.Equals(exe))
                 {
                     TotalSize += file.Length;
                     string FileSize = GetFileSize(file.Length);
