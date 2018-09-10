@@ -10,17 +10,18 @@ namespace LeitorArquivos
     public class Program
     {
         public static string _diretorio = System.AppDomain.CurrentDomain.BaseDirectory.ToString();
+        public static List<string> _listNames = new List<string>();
 
         public static void Main(string[] args)
         {
             DirectoryInfo dirInfo = new DirectoryInfo(_diretorio);
 
-            var listNames = FindFiles(dirInfo);
+            FindFiles(dirInfo, false);
 
-            SaveListNames(listNames);
+            SaveListNames();
         }
 
-        private static void SaveListNames(List<string> relatorio)
+        private static void SaveListNames()
         {
             string arquivo = Path.Combine(_diretorio, string.Format("Lista_de_arquivos_{0}.txt", DateTime.Now.ToString("dd-MM-yyyy")));
 
@@ -28,18 +29,15 @@ namespace LeitorArquivos
 
             File.Create(arquivo).Dispose();
 
-            File.WriteAllLines(arquivo, relatorio);
+            File.WriteAllLines(arquivo, _listNames);
         }
 
-        private static List<string> FindFiles(DirectoryInfo dir)
+        private static void FindFiles(DirectoryInfo dir, bool sub)
         {
-            List<string> listNames = new List<string>();
-
             long TotalSize = 0;
 
             foreach (FileInfo file in dir.GetFiles())
             {
-
                 var exe = System.Reflection.Assembly.GetExecutingAssembly().ManifestModule.Name;
 
                 if (!file.Name.Equals(exe))
@@ -47,18 +45,19 @@ namespace LeitorArquivos
                     TotalSize += file.Length;
                     string FileSize = GetFileSize(file.Length);
 
-                    listNames.Add(string.Format("{0} | {1}", file.Name, FileSize));
+                    if (!sub)
+                        _listNames.Add(string.Format("{0} | {1}", file.Name, FileSize));
+                    else
+                        _listNames.Add(string.Format("{0} | {1}", file.FullName.Replace(_diretorio, string.Empty), FileSize));
                 }
             }
 
-            //foreach (DirectoryInfo subDir in dir.GetDirectories())
-            //{
-            //    FindFiles(subDir);
-            //}
+            foreach (DirectoryInfo subDir in dir.GetDirectories())
+            {
+                FindFiles(subDir, true);
+            }
 
-            listNames.Add(string.Format("Total: {0}", GetFileSize(TotalSize)));
-
-            return listNames;
+            _listNames.Add(string.Format("Total: {0}", GetFileSize(TotalSize)));
         }
 
         public static string GetFileSize(long Bytes)
